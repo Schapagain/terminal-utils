@@ -6,13 +6,8 @@ from geopy import geocoders
 import argparse
 import shutil
 
-api_key = os.environ.get("WEATHER_API_KEY") 
 days = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"]
 DAYS_IN_A_WEEK = len(days)
-units_map = {
-    "imperial" : u"\N{DEGREE SIGN}" + 'F',
-    "metric" : u"\N{DEGREE SIGN}" + "C",
-}
 
 def print_heading(text,width,subtext=None):
 
@@ -34,8 +29,12 @@ def print_weather(weather_response,unit):
         print(' ' * window_width)
 
 def get_weather_data(units,days):
-    hamilton_lat = "42.8270"
-    hamilton_long = "-75.5446"
+    api_key = os.environ.get("WEATHER_API_KEY") 
+    environ_lat = os.environ.get("WEATHER_LAT")
+    environ_long = os.environ.get("WEATHER_LONG")
+
+    hamilton_lat = "42.8270" if not environ_lat else environ_lat
+    hamilton_long = "-75.5446" if not environ_long else environ_long
     units = "metric"
     api_endpoint = f"https://api.openweathermap.org/data/2.5/onecall?lat={hamilton_lat}&lon={hamilton_long}&exclude=hourly,minutely,alerts&appid={api_key}&units={units}"
     
@@ -58,21 +57,37 @@ def get_weather_data(units,days):
 def main():
     today_idx = datetime.datetime.today().weekday()
     today = days[today_idx]
-    parser = argparse.ArgumentParser(description='Get weather information')
-    parser.add_argument(
-        'day', 
-        nargs = '?',
-        choices = [*days,"tomorrow","week","today"], 
-        help='day within one week from today',
+
+    example_usage = '''example:
+    weather
+    weather today
+    weather tomorrow
+    weather sunday -u imperial''' 
+
+    parser = argparse.ArgumentParser(
+        prog = 'weather',
+        epilog = example_usage,
+        description='Get weather predictions',
+        usage='%(prog)s [day] [options]',
+        formatter_class = argparse.RawDescriptionHelpFormatter
         )
     parser.add_argument(
-        '-u', 
+        'day', 
+        metavar = 'day',
+        nargs = '?',
+        type = str.lower,
+        choices = [*days,"tomorrow","week","today"], 
+        help='name of day within one week from today',
+        )
+    parser.add_argument(
+        '-u',
+        '--units',
+        metavar='',
         choices = ['imperial','metric'], 
-        help='units to display data in', 
+        help='default: (%(default)s) | Allowed units : %(choices)s', 
         default = 'metric'
         )
     args = parser.parse_args()
-
     if args.day is None or args.day == "today":
         day_indices = [0]
     elif args.day == "tomorrow" or args.day == 'morrow':
@@ -83,10 +98,18 @@ def main():
         day_indices = [days.index(args.day)]
         if day_indices[0] <= today_idx:
             day_indices[0] += (DAYS_IN_A_WEEK - today_idx)
-    weather_response = get_weather_data(args.u, day_indices)
-    if weather_response:
-        print_weather(weather_response,units_map[args.u])
-    else:
+
+    units_map = {
+        "imperial" : u"\N{DEGREE SIGN}" + 'F',
+        "metric" : u"\N{DEGREE SIGN}" + "C",
+    }
+    try:
+        weather_response = get_weather_data(args.units, day_indices)
+        if not weather_response: raise Exception()
+    except:
         print("Sorry, I couldn't fetch the weather information right now.")
+    else:
+        print_weather(weather_response,units_map[args.units])
+        
 
 if __name__ == "__main__" : main()
