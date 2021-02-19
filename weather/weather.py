@@ -2,6 +2,7 @@ import requests
 from sys import argv
 import os
 import datetime
+from geopy import geocoders
 import argparse
 import shutil
 
@@ -75,7 +76,7 @@ def main():
     if args.day is None or args.day == "today":
         day_indices = [0]
     elif args.day == "tomorrow" or args.day == 'morrow':
-        day_indices = [(today_idx + 1) % DAYS_IN_A_WEEK]
+        day_indices = [1]
     elif args.day == "week" or args.day == "this week":
         day_indices = range(0,DAYS_IN_A_WEEK)
     else:
