@@ -35,7 +35,6 @@ def get_weather_data(units,days):
 
     hamilton_lat = "42.8270" if not environ_lat else environ_lat
     hamilton_long = "-75.5446" if not environ_long else environ_long
-    units = "metric"
     api_endpoint = f"https://api.openweathermap.org/data/2.5/onecall?lat={hamilton_lat}&lon={hamilton_long}&exclude=hourly,minutely,alerts&appid={api_key}&units={units}"
     
     response = requests.get(api_endpoint)
