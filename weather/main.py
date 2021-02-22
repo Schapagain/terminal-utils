@@ -2,7 +2,6 @@ import requests
 from sys import argv
 import os
 import datetime
-from geopy import geocoders
 import argparse
 import shutil
 
